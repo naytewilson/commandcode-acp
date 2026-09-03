@@ -85,3 +85,77 @@ copying `auth.json` or API keys between machines.
 `COMMAND_CODE_API_KEY`, which takes precedence). The bridge passes the
 environment through, never logs it, and classifies auth failures (exit 3)
 instead of masking them.
+
+## T3 Code Integration
+
+T3 Code integrates Command Code natively through its provider driver registry
+(branch `forge/commandcode-acp-provider`):
+
+- **Driver:** `CommandCodeDriver` in `apps/server/src/provider/Drivers/CommandCodeDriver.ts`
+- **Settings:** `CommandCodeSettings` with optional `binaryPath` override
+- **Modes:** Maps T3 interaction modes (`plan` -> `plan`, `full-access`/`auto-accept-edits` -> `auto-accept`, standard -> `default`)
+- **Models:** Real model discovery via `cmd --list-models` (e.g. `poolside/laguna-s-2.1-free`, `moonshotai/kimi-k2.5`, `meta/muse-spark-1.3-contributor`)
+- **Resume:** Preserves exact `cmdSessionId` cursor across process restarts
+
+## Paseo Integration (Dual Host: NEO & DELL)
+
+Paseo consumes `commandcode-acp` as a custom ACP provider (`extends: "acp"`).
+
+### NEO Configuration (`~/.paseo/config.json`)
+
+```json
+{
+  "agents": {
+    "providers": {
+      "commandcode": {
+        "extends": "acp",
+        "label": "Command Code",
+        "description": "Command Code CLI via the commandcode-acp stdio bridge (cmd -p --output-format json).",
+        "command": [
+          "/Users/nayte/.nvm/versions/node/v22.23.1/bin/node",
+          "/Users/nayte/Projects/commandcode-acp/dist/src/index.js"
+        ],
+        "env": {
+          "COMMANDCODE_BIN": "/Users/nayte/.nvm/versions/node/v22.23.1/bin/cmd"
+        },
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+### DELL Configuration (`/home/nayte/.paseo/config.json` on `anvil-node-02`)
+
+```json
+{
+  "agents": {
+    "providers": {
+      "commandcode": {
+        "extends": "acp",
+        "label": "Command Code",
+        "description": "Command Code CLI via the commandcode-acp stdio bridge (cmd -p --output-format json).",
+        "command": [
+          "/usr/bin/node",
+          "/home/nayte/commandcode-acp/dist/src/index.js"
+        ],
+        "env": {
+          "COMMANDCODE_BIN": "/usr/local/bin/cmd"
+        },
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+## Acceptance Verification
+
+```sh
+# Run full bridge unit + fixture test suite (47 tests):
+npm test
+
+# Verify ACP handshake and model discovery directly over stdio:
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":1,"clientCapabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | node dist/src/index.js
+```
+
