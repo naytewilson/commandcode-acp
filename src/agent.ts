@@ -69,7 +69,17 @@ function modelOptions(): Array<{ value: string; name: string; description?: stri
 }
 
 function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[] {
-  const opts: acp.SessionConfigOption[] = [];
+  const opts: acp.SessionConfigOption[] = [
+    {
+      id: "mode",
+      type: "select",
+      name: "Mode",
+      description: "Command Code permission and execution mode.",
+      category: "mode",
+      currentValue: session.mode,
+      options: MODES.map((m) => ({ value: m.id, name: m.name, description: m.description })),
+    },
+  ];
   if (catalog.models.length > 0) {
     opts.push({
       id: "model",
@@ -282,6 +292,15 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
         const p = ctx.params as { sessionId?: string; configId?: string; value?: unknown };
         const s = requireSession(String(p.sessionId ?? ""));
         const configId = String(p.configId ?? "");
+        if (configId === "mode") {
+          const modeId = String(p.value ?? "");
+          if (modeId !== "default" && modeId !== "plan" && modeId !== "auto-accept") {
+            throw new acp.RequestError(-32602, `unknown mode: ${modeId} (expected default|plan|auto-accept)`);
+          }
+          s.mode = modeId as SessionMode;
+          log("info", `session/set_config_option mode set=${modeId}`);
+          return { configOptions: sessionConfigOptions(s) };
+        }
         if (configId === "model") {
           if (typeof p.value !== "string" || !p.value.trim()) {
             throw new acp.RequestError(-32602, "model value must be a non-empty string");
