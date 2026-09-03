@@ -1,0 +1,9 @@
+{"type":"event","event":{"type":"notice","level":"info","message":"[update-notice] update available: v1.44.0 (installing in the background — a restart applies it)"}}
+{"type":"event","event":{"type":"run_start","sessionId":"0e1b5bd2-41d6-4b1f-93ad-04f291998d65"}}
+{"type":"event","event":{"type":"turn_start","turnNumber":1}}
+{"type":"event","event":{"type":"message_start"}}
+{"type":"event","event":{"type":"model_request_start","model":"poolside/laguna-s-2.1-free"}}
+{"type":"event","event":{"type":"model_trace","traceId":"e72dd17d5844d23c63a0ffb9a32f6331"}}
+{"type":"event","event":{"type":"run_error","error":{"name":"TransportError","message":"POST /alpha/generate → 401 error: Invalid 'Authorization' header or token."}}}
+{"type":"event","event":{"type":"run_end","result":{"finalText":"","stopReason":"run_error","turnCount":1,"usage":{"inputTokens":0,"outputTokens":0,"cacheReadTokens":0,"cacheWriteTokens":0},"systemPromptTokens":null,"nextState":{"sessionId":"0e1b5bd2-41d6-4b1f-93ad-04f291998d65","messages":[{"role":"user","content":[{"type":"text","text":"Reply with exactly: AUTH_OK"}],"meta":{"source":"user","createdAt":1788424449961,"messageId":"40ed3b8e-18b8-4563-931d-c4f08860c9af"}}],"interrupted":false,"modState":{"workspace":{"cwd":"/private/tmp/opencode/cmd-disc/probe1","platform":"darwin","branch":null,"gitStatus":null,"recentCommits":[],"additionalDirectories":[]}}}}}}
+{"type":"result","subtype":"error","sessionId":"0e1b5bd2-41d6-4b1f-93ad-04f291998d65","usage":{"inputTokens":0,"outputTokens":0,"cacheReadTokens":0,"cacheWriteTokens":0},"durationMs":1375,"finalText":"","error":"Error: Authentication failed. Please run \"cmd login\" first."}

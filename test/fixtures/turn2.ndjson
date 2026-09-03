@@ -1,0 +1,23 @@
+{"type":"event","event":{"type":"notice","level":"info","message":"[update-notice] update available: v1.44.0 (installing in the background — a restart applies it)"}}
+{"type":"event","event":{"type":"run_start","sessionId":"8368b55a-0b1f-48e2-80f5-7dea1877bc38"}}
+{"type":"event","event":{"type":"turn_start","turnNumber":1}}
+{"type":"event","event":{"type":"message_start"}}
+{"type":"event","event":{"type":"model_request_start","model":"poolside/laguna-s-2.1-free"}}
+{"type":"event","event":{"type":"model_trace","traceId":"1d758456e1115c20fcc2680123142e7d"}}
+{"type":"event","event":{"type":"model_trace","traceId":"1d758456e1115c20fcc2680123142e7d"}}
+{"type":"event","event":{"type":"model_trace","traceId":"1d758456e1115c20fcc2680123142e7d"}}
+{"type":"event","event":{"type":"api_retry","attempt":3,"error":"Service temporarily unavailable. Please try again shortly.","delayMs":1000}}
+{"type":"event","event":{"type":"model_trace","traceId":"1d758456e1115c20fcc2680123142e7d"}}
+{"type":"event","event":{"type":"api_retry","attempt":4,"error":"Service temporarily unavailable. Please try again shortly.","delayMs":1000}}
+{"type":"event","event":{"type":"model_trace","traceId":"1d758456e1115c20fcc2680123142e7d"}}
+{"type":"event","event":{"type":"text_delta","delta":"RES"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"RES"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"UME"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"RESUME"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"_OK"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"RESUME_OK"}]}}
+{"type":"event","event":{"type":"model_request_end","model":"poolside/laguna-s-2.1-free","usage":{"inputTokens":38223,"outputTokens":4,"cacheReadTokens":544,"cacheWriteTokens":0},"stopReason":"stop"}}
+{"type":"event","event":{"type":"message_end","content":[{"type":"text","text":"RESUME_OK"}]}}
+{"type":"event","event":{"type":"turn_end","turnNumber":1,"hadToolCalls":false,"usage":{"inputTokens":38223,"outputTokens":4,"cacheReadTokens":544,"cacheWriteTokens":0}}}
+{"type":"event","event":{"type":"run_end","result":{"finalText":"RESUME_OK","stopReason":"end_turn","turnCount":1,"usage":{"inputTokens":38223,"outputTokens":4,"cacheReadTokens":544,"cacheWriteTokens":0},"systemPromptTokens":null,"nextState":{"sessionId":"8368b55a-0b1f-48e2-80f5-7dea1877bc38","messages":[{"role":"user","content":[{"type":"text","text":"Reply with exactly: RESUME_OK and nothing else"}],"meta":{"source":"user","createdAt":1788424266253,"messageId":"5b06b5d8-8ac4-4921-bdd0-68945b4cd568"}},{"role":"assistant","content":[{"type":"text","text":"RESUME_OK"}],"meta":{"source":"model","createdAt":1788424273228,"messageId":"f067103a-4b5b-4a85-817b-596f6d7c0500"}}],"interrupted":false,"modState":{"workspace":{"cwd":"/private/tmp/opencode/cmd-disc/probe1","platform":"darwin","branch":null,"gitStatus":null,"recentCommits":[],"additionalDirectories":[]},"compaction":38223}}}}}
+{"type":"result","subtype":"success","sessionId":"8368b55a-0b1f-48e2-80f5-7dea1877bc38","stopReason":"end_turn","usage":{"inputTokens":38223,"outputTokens":4,"cacheReadTokens":544,"cacheWriteTokens":0},"durationMs":7166,"finalText":"RESUME_OK"}

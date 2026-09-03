@@ -1,0 +1,35 @@
+{"type":"event","event":{"type":"notice","level":"info","message":"[update-notice] update available: v1.44.0 (installing in the background — a restart applies it)"}}
+{"type":"event","event":{"type":"run_start","sessionId":"8368b55a-0b1f-48e2-80f5-7dea1877bc38"}}
+{"type":"event","event":{"type":"turn_start","turnNumber":1}}
+{"type":"event","event":{"type":"message_start"}}
+{"type":"event","event":{"type":"model_request_start","model":"poolside/laguna-s-2.1-free"}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"api_retry","attempt":3,"error":"Service temporarily unavailable. Please try again shortly.","delayMs":1000}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"api_retry","attempt":4,"error":"Service temporarily unavailable. Please try again shortly.","delayMs":1000}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"api_retry","attempt":5,"error":"Service temporarily unavailable. Please try again shortly.","delayMs":1600}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"api_retry","attempt":6,"error":"Service temporarily unavailable. Please try again shortly.","delayMs":3200}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"api_retry","attempt":7,"error":"Service temporarily unavailable. Please try again shortly.","delayMs":6400}}
+{"type":"event","event":{"type":"model_trace","traceId":"02c5832636a59fb921a2982b9bc23f19"}}
+{"type":"event","event":{"type":"text_delta","delta":"DIS"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"DIS"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"CR"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"DISCR"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"IM"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"DISCRIM"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"IN"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"DISCRIMIN"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"ATOR"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"DISCRIMINATOR"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"_OK"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"DISCRIMINATOR_OK"}]}}
+{"type":"event","event":{"type":"model_request_end","model":"poolside/laguna-s-2.1-free","usage":{"inputTokens":38226,"outputTokens":7,"cacheReadTokens":7424,"cacheWriteTokens":0},"stopReason":"stop"}}
+{"type":"event","event":{"type":"message_end","content":[{"type":"text","text":"DISCRIMINATOR_OK"}]}}
+{"type":"event","event":{"type":"turn_end","turnNumber":1,"hadToolCalls":false,"usage":{"inputTokens":38226,"outputTokens":7,"cacheReadTokens":7424,"cacheWriteTokens":0}}}
+{"type":"event","event":{"type":"run_end","result":{"finalText":"DISCRIMINATOR_OK","stopReason":"end_turn","turnCount":1,"usage":{"inputTokens":38226,"outputTokens":7,"cacheReadTokens":7424,"cacheWriteTokens":0},"systemPromptTokens":null,"nextState":{"sessionId":"8368b55a-0b1f-48e2-80f5-7dea1877bc38","messages":[{"role":"user","content":[{"type":"text","text":"Reply with exactly: DISCRIMINATOR_OK and nothing else"}],"meta":{"source":"user","createdAt":1788424224741,"messageId":"c66b8e47-0f8f-4985-9d19-bd10de5618a7"}},{"role":"assistant","content":[{"type":"text","text":"DISCRIMINATOR_OK"}],"meta":{"source":"model","createdAt":1788424244643,"messageId":"242985b0-b20c-48b2-bb36-f95595e72012"}}],"interrupted":false,"modState":{"workspace":{"cwd":"/private/tmp/opencode/cmd-disc/probe1","platform":"darwin","branch":null,"gitStatus":null,"recentCommits":[],"additionalDirectories":[]},"compaction":38226}}}}}
+{"type":"result","subtype":"success","sessionId":"8368b55a-0b1f-48e2-80f5-7dea1877bc38","stopReason":"end_turn","usage":{"inputTokens":38226,"outputTokens":7,"cacheReadTokens":7424,"cacheWriteTokens":0},"durationMs":20184,"finalText":"DISCRIMINATOR_OK"}

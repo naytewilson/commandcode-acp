@@ -1,0 +1,2 @@
+Error: unknown model "does-not-exist-xyz".
+Run "cmd --list-models" to see all available models

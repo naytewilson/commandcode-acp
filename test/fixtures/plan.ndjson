@@ -1,0 +1,17 @@
+{"type":"event","event":{"type":"notice","level":"info","message":"[update-notice] update available: v1.44.0 (installing in the background — a restart applies it)"}}
+{"type":"event","event":{"type":"run_start","sessionId":"102a72d2-5d22-42e8-af89-63e7210e83f2"}}
+{"type":"event","event":{"type":"turn_start","turnNumber":1}}
+{"type":"event","event":{"type":"message_start"}}
+{"type":"event","event":{"type":"model_request_start","model":"poolside/laguna-s-2.1-free"}}
+{"type":"event","event":{"type":"model_trace","traceId":"93893749a50a9f2c53efacca3afc6d98"}}
+{"type":"event","event":{"type":"model_trace","traceId":"93893749a50a9f2c53efacca3afc6d98"}}
+{"type":"event","event":{"type":"model_trace","traceId":"93893749a50a9f2c53efacca3afc6d98"}}
+{"type":"event","event":{"type":"text_delta","delta":"PLAN"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"PLAN"}]}}
+{"type":"event","event":{"type":"text_delta","delta":"_OK"}}
+{"type":"event","event":{"type":"message_update","content":[{"type":"text","text":"PLAN_OK"}]}}
+{"type":"event","event":{"type":"model_request_end","model":"poolside/laguna-s-2.1-free","usage":{"inputTokens":30377,"outputTokens":3,"cacheReadTokens":0,"cacheWriteTokens":0},"stopReason":"stop"}}
+{"type":"event","event":{"type":"message_end","content":[{"type":"text","text":"PLAN_OK"}]}}
+{"type":"event","event":{"type":"turn_end","turnNumber":1,"hadToolCalls":false,"usage":{"inputTokens":30377,"outputTokens":3,"cacheReadTokens":0,"cacheWriteTokens":0}}}
+{"type":"event","event":{"type":"run_end","result":{"finalText":"PLAN_OK","stopReason":"end_turn","turnCount":1,"usage":{"inputTokens":30377,"outputTokens":3,"cacheReadTokens":0,"cacheWriteTokens":0},"systemPromptTokens":null,"nextState":{"sessionId":"102a72d2-5d22-42e8-af89-63e7210e83f2","messages":[{"role":"user","content":[{"type":"text","text":"Reply with exactly: PLAN_OK"}],"meta":{"source":"user","createdAt":1788424316989,"messageId":"4da173c0-124c-4303-8d30-f819912f0a39"}},{"role":"assistant","content":[{"type":"text","text":"PLAN_OK"}],"meta":{"source":"model","createdAt":1788424321160,"messageId":"b73056a1-fffa-4de3-bcc9-5c7d07b3850d"}}],"interrupted":false,"modState":{"workspace":{"cwd":"/private/tmp/opencode/cmd-disc/probe1","platform":"darwin","branch":null,"gitStatus":null,"recentCommits":[],"additionalDirectories":[]},"compaction":30377}}}}}
+{"type":"result","subtype":"success","sessionId":"102a72d2-5d22-42e8-af89-63e7210e83f2","stopReason":"end_turn","usage":{"inputTokens":30377,"outputTokens":3,"cacheReadTokens":0,"cacheWriteTokens":0},"durationMs":4344,"finalText":"PLAN_OK"}
