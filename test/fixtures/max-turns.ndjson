@@ -1,0 +1,8 @@
+{"type":"event","event":{"type":"run_start","sessionId":"99999999-0000-4000-8000-000000000005"}}
+{"type":"event","event":{"type":"turn_start","turnNumber":1}}
+{"type":"event","event":{"type":"text_delta","delta":"turn 1 output"}}
+{"type":"event","event":{"type":"turn_end","turnNumber":1,"hadToolCalls":false,"usage":{"inputTokens":50,"outputTokens":5}}}
+{"type":"event","event":{"type":"turn_start","turnNumber":2}}
+{"type":"event","event":{"type":"text_delta","delta":"turn 2 reached limit"}}
+{"type":"event","event":{"type":"turn_end","turnNumber":2,"hadToolCalls":false,"usage":{"inputTokens":60,"outputTokens":8}}}
+{"type":"result","subtype":"max_turns","sessionId":"99999999-0000-4000-8000-000000000005","stopReason":"max_turns","usage":{"inputTokens":110,"outputTokens":13},"durationMs":1500,"finalText":"turn 2 reached limit"}

@@ -1,0 +1,4 @@
+{"type":"event","event":{"type":"run_start","sessionId":"99999999-0000-4000-8000-000000000004"}}
+{"type":"event","event":{"type":"turn_start","turnNumber":1}}
+{"type":"event","event":{"type":"tool_hook_blocked","toolCallId":"call-perm-denied-001","toolName":"shell_command","hookOutput":"Error: Tool \"shell_command\" requires permissions. Operation prohibited in read-only mode."}}
+{"type":"result","subtype":"error","sessionId":"99999999-0000-4000-8000-000000000004","usage":{"inputTokens":100,"outputTokens":15},"durationMs":250,"finalText":"","error":"Error: Operation denied by permission rules: tool execution prohibited."}

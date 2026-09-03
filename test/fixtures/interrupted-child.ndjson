@@ -1,0 +1,4 @@
+{"type":"event","event":{"type":"run_start","sessionId":"99999999-0000-4000-8000-000000000007"}}
+{"type":"event","event":{"type":"text_delta","delta":"processing before interrup"}}
+{"type":"event","event":{"type":"notice","level":"warn","message":"Received interrupt signal (SIGINT)"}}
+{"type":"result","subtype":"error","sessionId":"99999999-0000-4000-8000-000000000007","usage":{"inputTokens":40,"outputTokens":5},"durationMs":600,"finalText":"","error":"Process interrupted by signal"}

@@ -1,0 +1,6 @@
+{"type":"event","event":{"type":"notice","level":"info","message":"start"}}
+{bad json syntax line here that cannot parse
+{"type":"event","event":{"type":"run_start","sessionId":"99999999-0000-4000-8000-000000000001"}}
+{"type":"event","event":{"type":"text_delta","delta":"recovered text"}}
+{"type":"incomplete: {"unterminated": "string
+{"type":"result","subtype":"success","sessionId":"99999999-0000-4000-8000-000000000001","stopReason":"end_turn","usage":{"inputTokens":10,"outputTokens":2},"durationMs":100,"finalText":"recovered text"}

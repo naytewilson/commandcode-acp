@@ -1,0 +1,2 @@
+{"type":"event","event":{"type":"notice","level":"error","message":"Resume target session 00000000-dead-beef-0000-000000000000 was not found on disk"}}
+{"type":"result","subtype":"error","usage":{"inputTokens":0,"outputTokens":0},"durationMs":35,"finalText":"","error":"Error: Session not found: 00000000-dead-beef-0000-000000000000. Could not resume transcript."}

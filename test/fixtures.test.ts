@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { parseListModels } from "../src/catalog.js";
-import { isFinalResult, parseCmdLine } from "../src/cmdEvents.js";
+import { isFinalResult, parseCmdLine, type CmdLine } from "../src/cmdEvents.js";
 import { DIAGNOSTIC_EVENTS, mapCmdEvent } from "../src/eventMap.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -97,4 +97,101 @@ describe("live fixtures (sanitized captures, cmd v1.15.1 Neo)", () => {
   it("bad-model stderr fixture documents exit-1 validation", () => {
     assert.match(fx("badmodel.stderr.txt"), /unknown model/);
   });
+
+  it("malformed fixture: skips malformed JSON lines and retains valid turn", () => {
+    const rawLines = fx("malformed.ndjson").split("\n").filter((l) => l.trim());
+    let malformed = 0;
+    const valid: CmdLine[] = [];
+    for (const l of rawLines) {
+      try {
+        const parsed = parseCmdLine(l);
+        if (parsed) valid.push(parsed);
+      } catch {
+        malformed++;
+      }
+    }
+    assert.equal(malformed, 2, "must detect exactly 2 malformed lines");
+    assert.equal(valid.length, 4, "must preserve 4 valid frames");
+    const last = valid[valid.length - 1]!;
+    assert.ok(isFinalResult(last) && last.subtype === "success");
+    assert.equal(last.finalText, "recovered text");
+  });
+
+  it("unknown-events fixture: unmapped future events safely ignored and counted", () => {
+    const lines = frames("unknown-events.ndjson");
+    let unknownCount = 0;
+    for (const f of lines) {
+      if (f.type !== "event") continue;
+      const o = mapCmdEvent(f.event.type, f.event as unknown as Record<string, unknown>);
+      if (!o.recognized && !DIAGNOSTIC_EVENTS.has(f.event.type)) {
+        unknownCount++;
+      }
+    }
+    assert.equal(unknownCount, 2, "must count exactly 2 future unknown events");
+    const last = lines[lines.length - 1]!;
+    assert.ok(isFinalResult(last) && last.subtype === "success");
+  });
+
+  it("early-auth-missing-session fixture: error handled safely when sessionId is omitted", () => {
+    const lines = frames("early-auth-missing-session.ndjson");
+    const last = lines[lines.length - 1]!;
+    assert.ok(isFinalResult(last));
+    assert.equal(last.subtype, "error");
+    assert.equal(last.sessionId, undefined);
+    assert.match(last.error ?? "", /Authentication failed/);
+  });
+
+  it("permission-denial fixture: blocked tool hook maps to failed status", () => {
+    const lines = frames("permission-denial.ndjson");
+    let blockedHook = false;
+    for (const f of lines) {
+      if (f.type !== "event") continue;
+      const o = mapCmdEvent(f.event.type, f.event as unknown as Record<string, unknown>);
+      for (const u of o.updates) {
+        if (u.sessionUpdate === "tool_call_update" && u.status === "failed") {
+          blockedHook = true;
+        }
+      }
+    }
+    assert.ok(blockedHook, "must report blocked tool hook as failed");
+    const last = lines[lines.length - 1]!;
+    assert.ok(isFinalResult(last));
+    assert.equal(last.subtype, "error");
+    assert.match(last.error ?? "", /permission rules/);
+  });
+
+  it("max-turns fixture: reports max_turns subtype and stopReason", () => {
+    const lines = frames("max-turns.ndjson");
+    const last = lines[lines.length - 1]!;
+    assert.ok(isFinalResult(last));
+    assert.equal(last.subtype, "max_turns");
+    assert.equal(last.stopReason, "max_turns");
+    assert.ok(last.sessionId);
+  });
+
+  it("network-failure fixture: reports network error", () => {
+    const lines = frames("network-failure.ndjson");
+    const last = lines[lines.length - 1]!;
+    assert.ok(isFinalResult(last));
+    assert.equal(last.subtype, "error");
+    assert.match(last.error ?? "", /Network connection failed/);
+  });
+
+  it("interrupted-child fixture: reports interrupted error", () => {
+    const lines = frames("interrupted-child.ndjson");
+    const last = lines[lines.length - 1]!;
+    assert.ok(isFinalResult(last));
+    assert.equal(last.subtype, "error");
+    assert.match(last.error ?? "", /interrupted/);
+  });
+
+  it("resume-failure fixture: reports session not found and missing sessionId", () => {
+    const lines = frames("resume-failure.ndjson");
+    const last = lines[lines.length - 1]!;
+    assert.ok(isFinalResult(last));
+    assert.equal(last.subtype, "error");
+    assert.equal(last.sessionId, undefined);
+    assert.match(last.error ?? "", /Session not found/);
+  });
 });
+

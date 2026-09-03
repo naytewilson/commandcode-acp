@@ -1,0 +1,2 @@
+{"type":"event","event":{"type":"notice","level":"error","message":"No session token found in credentials store"}}
+{"type":"result","subtype":"error","usage":{"inputTokens":0,"outputTokens":0,"cacheReadTokens":0,"cacheWriteTokens":0},"durationMs":42,"finalText":"","error":"Error: Authentication failed. No credentials found. Run 'cmd login'."}

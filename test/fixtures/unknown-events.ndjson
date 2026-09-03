@@ -1,0 +1,6 @@
+{"type":"event","event":{"type":"notice","level":"info","message":"start"}}
+{"type":"event","event":{"type":"run_start","sessionId":"99999999-0000-4000-8000-000000000002"}}
+{"type":"event","event":{"type":"future_flow_state","state":"optimizing","step":1}}
+{"type":"event","event":{"type":"text_delta","delta":"forward compat"}}
+{"type":"event","event":{"type":"quantum_thought_stream","qubits":42}}
+{"type":"result","subtype":"success","sessionId":"99999999-0000-4000-8000-000000000002","stopReason":"end_turn","usage":{"inputTokens":12,"outputTokens":4},"durationMs":120,"finalText":"forward compat"}

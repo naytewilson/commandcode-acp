@@ -1,0 +1,4 @@
+{"type":"event","event":{"type":"run_start","sessionId":"99999999-0000-4000-8000-000000000006"}}
+{"type":"event","event":{"type":"api_retry","attempt":1,"error":"Network connection dropped: fetch failed ENOTFOUND","delayMs":500}}
+{"type":"event","event":{"type":"run_error","error":{"name":"NetworkError","message":"fetch failed ENOTFOUND"}}}
+{"type":"result","subtype":"error","sessionId":"99999999-0000-4000-8000-000000000006","usage":{"inputTokens":0,"outputTokens":0},"durationMs":1200,"finalText":"","error":"Error: Network connection failed after retries. Check your internet connection."}
