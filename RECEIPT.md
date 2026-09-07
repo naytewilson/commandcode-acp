@@ -201,3 +201,47 @@ when T3 has selected its corresponding high-authority runtime mode.
 
 This addendum is evidence for the isolated candidate only. It authorizes no
 production service restart, database migration, or push.
+
+### 8. 2026-09-07 provider-fidelity bridge addendum
+
+This addendum records the current capability-aware bridge checkpoint used by
+the isolated Dell candidate. It supersedes the older 1.44.0 runtime facts for
+this candidate only.
+
+- Source repository: `https://github.com/naytewilson/commandcode-acp.git`
+- Source branch: `main`
+- Source HEAD: `c3e59a35c5bdf560d5224d2b4dec3b70a99833f2`
+- Bridge version: `0.2.0`
+- Node requirement: `>=22`; candidate Node runtime was the Dell Node 22
+  installation used by the T3 workspace.
+- Build: `npm run build` passed.
+- Tests: `npm test` passed, 50 tests, 0 failures.
+- Current CLI compatibility probe: Command Code `1.50.0`, authenticated, 68
+  discovered models, 42 models with recognized bundle capability metadata.
+- Capability source: the installed CLI's sibling
+  `command-code/dist/cli.mjs`; the parser fails closed if the bundle registry
+  shape is not recognized.
+- Isolated CLI executable:
+  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/command-code-1.50.0/node_modules/.bin/cmd`
+- Current staged bridge tarball:
+  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bridge-artifacts/commandcode-acp-c3e59a3/commandcode-acp-0.2.0.tgz`
+  - SHA-256: `d5757c187f21b52e8e7c58368a03ee9e0c32506de26c2117a4017075395df719`
+- Current staged bridge entrypoint:
+  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bridge-artifacts/commandcode-acp-c3e59a3/runtime/node_modules/commandcode-acp/dist/src/index.js`
+  - SHA-256: `2487ec72db94f425eea69a0c4c126000e818c499c6b84108042011666e68bbac`
+- Rollback source commit: `15bed857a976da39cf6e37156c91761c135b9756`
+- Rollback staged tarball:
+  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bridge-artifacts/commandcode-acp-rollback-15bed857/commandcode-acp-0.2.0.tgz`
+  - SHA-256: `834b2e39709fcee7beed3e59a38b1eb49be5a3d7df7c0e37c068aa6046a125b7`
+- Rollback staged entrypoint SHA-256:
+  `03b74343872c2def38782ce1bf7f63ccf319c88ce0d12c76a68386582c8f7b61`
+- Candidate bridge link:
+  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bin/commandcode-acp`
+  points to the current staged entrypoint, not the mutable bridge checkout.
+- Remote state: the owned bridge branch is one local commit ahead of
+  `origin/main`; no push was performed because this wave did not authorize a
+  remote write.
+
+The staging operation was performed under the isolated candidate runtime. It
+did not alter `/usr/local/bin/cmd`, the production T3 service, port 3773, or
+the legacy database.

@@ -98,6 +98,47 @@ T3 Code integrates Command Code natively through its provider driver registry
 - **Models:** Real model discovery via `cmd --list-models` (e.g. `poolside/laguna-s-2.1-free`, `moonshotai/kimi-k2.5`, `meta/muse-spark-1.3-contributor`)
 - **Resume:** Preserves exact `cmdSessionId` cursor across process restarts
 
+### Current model-capability fidelity
+
+The bridge discovers the model list from the installed Command Code executable
+and extracts capability metadata from that same installed bundle. It does not
+infer capabilities from model names. The current parser recognizes the
+Command Code registry shape used by the installed `dist/cli.mjs` and fails
+closed (no capability metadata) when that shape changes.
+
+For each recognized model, the ACP initialize metadata may include:
+
+- `commandCodeCapabilities.reasoningEfforts` — the exact `--effort` values
+  maintained by Command Code for that model;
+- `commandCodeCapabilities.contextWindow` — the bundle's context-window value;
+- `commandCodeCapabilities.supportsVision` — derived from Command Code's own
+  known-text-only registry.
+
+The bridge exposes the ACP `effort` select only for the selected model's
+confirmed reasoning values. A selected effort is passed as `--effort <value>`
+to the next `cmd` invocation and is included in the non-secret debug record.
+For example, Command Code 1.50.0 reports `low`, `medium`, `high`, `xhigh`, and
+`max` for `meta/muse-spark-1.3`, while
+`meta/muse-spark-1.3-contributor` reports no `max`; the bridge preserves that
+distinction.
+
+### Pinned deployment contract
+
+The bridge is an independent companion component. A deployment must record:
+
+1. the source remote and exact bridge commit;
+2. `node --version` (Node.js 22 or newer);
+3. `npm run build` and `npm test` results;
+4. the exact `npm pack` tarball and staged entrypoint SHA-256 values;
+5. the compatible Command Code CLI version and its isolated executable path;
+6. the rollback artifact and its source commit.
+
+Stage a release from the checked-out commit with `npm pack`, install that
+tarball into a candidate-owned prefix, and point both the ACP launcher and
+`COMMANDCODE_BIN` at the staged paths. Production must not point at a mutable
+development worktree. Rollback selects the recorded prior staged artifact and
+restores its bridge/CLI pair without changing T3 core.
+
 ## Paseo Integration (Dual Host: NEO & DELL)
 
 Paseo consumes `commandcode-acp` as a custom ACP provider (`extends: "acp"`).
@@ -153,7 +194,7 @@ Paseo consumes `commandcode-acp` as a custom ACP provider (`extends: "acp"`).
 ## Acceptance Verification
 
 ```sh
-# Run full bridge unit + fixture test suite (47 tests):
+# Run full bridge unit + fixture test suite (50 tests):
 npm test
 
 # Verify ACP handshake and model discovery directly over stdio:
