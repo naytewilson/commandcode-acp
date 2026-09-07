@@ -41,6 +41,8 @@ describe("runner", () => {
     assert.ok(a.includes("--plan"));
     const b = buildCmdArgs({ promptText: "hi", mode: "auto-accept" });
     assert.ok(b.includes("--auto-accept") && !b.includes("--yolo"));
+    const c = buildCmdArgs({ promptText: "hi", mode: "full-access" });
+    assert.ok(c.includes("--yolo") && !c.includes("--auto-accept") && !c.includes("--plan"));
   });
 
   it("success path streams updates, counts unknown+malformed, binds session", async () => {

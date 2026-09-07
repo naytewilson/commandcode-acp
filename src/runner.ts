@@ -9,7 +9,7 @@ import { CANCEL_SHUTDOWN_MS, classifyExitCode, describeClassification, stopReaso
 import { isFinalResult, parseCmdLine, type CmdFinalResult } from "./cmdEvents.js";
 import { DIAGNOSTIC_EVENTS, mapCmdEvent, type AcpUpdate } from "./eventMap.js";
 
-export type SessionMode = "default" | "plan" | "auto-accept";
+export type SessionMode = "default" | "plan" | "auto-accept" | "full-access";
 
 export interface RunOptions {
   cmdBin: string;
@@ -69,6 +69,10 @@ export function buildCmdArgs(o: {
       break;
     case "auto-accept":
       args.push("--auto-accept");
+      break;
+    case "full-access":
+      // Only an explicit ACP full-access selection may add --yolo.
+      args.push("--yolo");
       break;
     case "default":
       break;

@@ -5,12 +5,6 @@ import { serve } from "./agent.js";
 import { discoverCatalog } from "./catalog.js";
 import { execFile } from "node:child_process";
 
-import * as fs from "node:fs";
-try {
-  fs.writeFileSync("/tmp/paseo-env.json", JSON.stringify(process.env, null, 2));
-  fs.appendFileSync("/tmp/commandcode-acp-stdio.log", `[INDEX] pid=${process.pid} PATH=${process.env["PATH"]}\n`);
-} catch {}
-
 const CMD_BIN = process.env["COMMANDCODE_BIN"]?.trim() || "cmd";
 const args = process.argv.slice(2);
 

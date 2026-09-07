@@ -167,3 +167,37 @@
 
 ### 6. EXIT GATE STATUS
 `COMMAND_CODE_T3_PASEO_DUAL_HOST_RUNTIME_PROVEN`: **PASSED**
+
+---
+
+### 7. 2026-09-07 T3 v0.0.39 provider-candidate addendum
+
+This addendum records the provider-only Dell candidate work performed after
+the historical receipt above. The earlier `no silent --yolo` statement remains
+true for default and auto-accept-edits modes. The bridge now also advertises a
+separate, explicit `full-access` ACP mode; only that mode emits `cmd --yolo`
+when T3 has selected its corresponding high-authority runtime mode.
+
+- Bridge source was rebuilt locally at `0.2.0`; the temporary debug writes to
+  `/tmp/paseo-env.json` and `/tmp/commandcode-acp-stdio.log` were removed.
+- T3 candidate branch: `campaign/t3code-0.0.39-provider-only`.
+- T3 candidate base: official `v0.0.39` tag at
+  `6abdf37a50ce6c1c9fabc499f4d0e159a6182d90`.
+- Isolated candidate runtime: `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b`.
+- Isolated candidate listener: `127.0.0.1:3873`.
+- Candidate live adapter evidence on Dell used Command Code CLI `1.44.0` and
+  Muse CLI `1.0.3` without printing credential values.
+- Command Code live adapter checks passed for streamed text, a successful
+  `command_execution` carrying `COMMAND_CODE_TOOL_OK`, cancellation, and
+  resume on the same native Command Code session id.
+- Muse live adapter checks passed for model discovery, streamed text,
+  `dynamic_tool_call` plus `command_output` carrying `MUSE_TOOL_OK`,
+  cancellation, and resume on the same native Muse session id. Muse terminal
+  completion can be delayed after the final assistant item; the candidate
+  preserves and maps the upstream `turn/completed` event rather than
+  fabricating one.
+- Bridge verification after the mode change: `npm test` — 47 passed, 0
+  failed.
+
+This addendum is evidence for the isolated candidate only. It authorizes no
+production service restart, database migration, or push.

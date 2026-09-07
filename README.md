@@ -28,7 +28,7 @@ BRIDGE_LOG=debug node dist/src/index.js
 - `initialize` → `{ protocolVersion: 1, agentCapabilities: { loadSession: true,
   promptCapabilities: { image: false, audio: false, embeddedContext: false } } }`
 - `session/new` → fresh ACP id, no cmd process yet. Response carries
-  `modes` (default/plan/auto-accept) and a `model` select config option
+  `modes` (default/plan/auto-accept/full-access) and a `model` select config option
   built from **real `cmd --list-models` discovery** (exact ids, no hard codes).
   Empty catalog → option omitted; use client-side `models` override instead.
 - `session/prompt` → exactly one `cmd -p <text> --output-format json`
@@ -40,7 +40,7 @@ BRIDGE_LOG=debug node dist/src/index.js
   Exit 130 is reported as `cancelled`, never as failure.
 - `session/load` → rebind a known ACP id, or bind an **explicit cmd
   transcript id** to a fresh ACP id (how T3 resumes across processes).
-- `session/set_mode` → `default` | `plan` | `auto-accept` (anything else rejected).
+- `session/set_mode` → `default` | `plan` | `auto-accept` | `full-access` (anything else rejected).
 - `session/set_config_option` → `model` (exact cmd id), `effort` (passthrough).
 
 ## Session contract
@@ -58,11 +58,12 @@ persisted to disk; resume state lives in the client's thread binding
 | `default`    | (none)           | Fail-closed headless defaults: reads allowed; writes/shell denied unless project rules allow. |
 | `plan`       | `--plan`         | Read-only exploration. |
 | `auto-accept`| `--auto-accept`  | Accept edits automatically. |
+| `full-access`| `--yolo`         | Explicit high-authority mode; enables shell and edit tools. |
 
-There is **no yolo mode**: `--yolo` is never added silently. `cmd -p`
-exposes no approval request/response channel (live evidence: denied tools
-emit terminal `tool_hook_blocked`, never an approval request), so no
-interactive approval bridging is implemented.
+`--yolo` is never added silently: it is emitted only for the explicit ACP
+`full-access` mode. `cmd -p` exposes no approval request/response channel
+(live evidence: denied tools emit terminal `tool_hook_blocked`, never an
+approval request), so no interactive approval bridging is implemented.
 
 ## Exit-code mapping (faithful)
 
@@ -93,7 +94,7 @@ T3 Code integrates Command Code natively through its provider driver registry
 
 - **Driver:** `CommandCodeDriver` in `apps/server/src/provider/Drivers/CommandCodeDriver.ts`
 - **Settings:** `CommandCodeSettings` with optional `binaryPath` override
-- **Modes:** Maps T3 interaction modes (`plan` -> `plan`, `full-access`/`auto-accept-edits` -> `auto-accept`, standard -> `default`)
+- **Modes:** Maps T3 interaction modes (`plan` -> `plan`, `full-access` -> `full-access`, `auto-accept-edits` -> `auto-accept`, standard -> `default`)
 - **Models:** Real model discovery via `cmd --list-models` (e.g. `poolside/laguna-s-2.1-free`, `moonshotai/kimi-k2.5`, `meta/muse-spark-1.3-contributor`)
 - **Resume:** Preserves exact `cmdSessionId` cursor across process restarts
 
@@ -158,4 +159,3 @@ npm test
 # Verify ACP handshake and model discovery directly over stdio:
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":1,"clientCapabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | node dist/src/index.js
 ```
-
