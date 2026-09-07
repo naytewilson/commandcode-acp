@@ -210,7 +210,8 @@ this candidate only.
 
 - Source repository: `https://github.com/naytewilson/commandcode-acp.git`
 - Source branch: `main`
-- Source HEAD: `c3e59a35c5bdf560d5224d2b4dec3b70a99833f2`
+- Source commit used to build the staged release: `3f589991b72d882d423e6a013f9cb451d261c3a3`
+- Capability implementation checkpoint: `c3e59a35c5bdf560d5224d2b4dec3b70a99833f2`
 - Bridge version: `0.2.0`
 - Node requirement: `>=22`; candidate Node runtime was the Dell Node 22
   installation used by the T3 workspace.
@@ -224,10 +225,10 @@ this candidate only.
 - Isolated CLI executable:
   `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/command-code-1.50.0/node_modules/.bin/cmd`
 - Current staged bridge tarball:
-  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bridge-artifacts/commandcode-acp-c3e59a3/commandcode-acp-0.2.0.tgz`
-  - SHA-256: `d5757c187f21b52e8e7c58368a03ee9e0c32506de26c2117a4017075395df719`
+  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bridge-artifacts/commandcode-acp-3f58999/commandcode-acp-0.2.0.tgz`
+  - SHA-256: `195878af788c030c21da8a669029b0ce0d01a6f46bb2904f2d25f3e2bb116807`
 - Current staged bridge entrypoint:
-  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bridge-artifacts/commandcode-acp-c3e59a3/runtime/node_modules/commandcode-acp/dist/src/index.js`
+  `/home/nayte/ANVIL-worker/runtime/t3code-provider-mandatory-20260907b/bridge-artifacts/commandcode-acp-3f58999/runtime/node_modules/commandcode-acp/dist/src/index.js`
   - SHA-256: `2487ec72db94f425eea69a0c4c126000e818c499c6b84108042011666e68bbac`
 - Rollback source commit: `15bed857a976da39cf6e37156c91761c135b9756`
 - Rollback staged tarball:
