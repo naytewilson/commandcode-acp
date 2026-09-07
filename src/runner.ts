@@ -110,7 +110,10 @@ export function runCmdTurn(opts: RunOptions): { promise: Promise<RunOutcome>; ca
       mode: opts.mode,
       maxTurns: opts.maxTurns,
     });
-    onLog("debug", `spawn cmd argc=${args.length} cwd_len=${opts.cwd.length} resume=${opts.resumeCmdSessionId ? "yes" : "no"} model=${opts.model ?? "(default)"} mode=${opts.mode}`);
+    onLog(
+      "debug",
+      `spawn cmd argc=${args.length} cwd_len=${opts.cwd.length} resume=${opts.resumeCmdSessionId ? "yes" : "no"} model=${opts.model ?? "(default)"} effort=${opts.effort ?? "(default)"} mode=${opts.mode}`,
+    );
     child = spawn(opts.cmdBin, args, { cwd: opts.cwd, stdio: ["ignore", "pipe", "pipe"] });
     const proc = child;
     const pid = proc.pid;

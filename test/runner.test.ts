@@ -45,6 +45,25 @@ describe("runner", () => {
     assert.ok(c.includes("--yolo") && !c.includes("--auto-accept") && !c.includes("--plan"));
   });
 
+  it("records the selected effort in the non-secret invocation log", async () => {
+    process.env["SCENARIO"] = "success";
+    const dir = mkdtempSync(join(tmpdir(), "cc-acp-"));
+    const logs: string[] = [];
+    const { promise } = runCmdTurn({
+      cmdBin: FAKE,
+      cwd: dir,
+      promptText: "hi",
+      model: "meta/muse-spark-1.3",
+      effort: "max",
+      mode: "default",
+      onUpdate: () => {},
+      onLog: (_level, message) => logs.push(message),
+      signal: { cancelled: false },
+    });
+    await promise;
+    assert.ok(logs.some((message) => message.includes("effort=max")));
+  });
+
   it("success path streams updates, counts unknown+malformed, binds session", async () => {
     process.env["SCENARIO"] = "success";
     const dir = mkdtempSync(join(tmpdir(), "cc-acp-"));

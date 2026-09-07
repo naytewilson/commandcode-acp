@@ -31,7 +31,12 @@ if (args.includes("--probe")) {
   const [ver, status, catalog] = await Promise.all([
     sh(CMD_BIN, ["--version"]),
     sh(CMD_BIN, ["status", "--json"]),
-    discoverCatalog(CMD_BIN).catch(() => ({ models: [], defaultModel: undefined as string | undefined, cmdVersion: undefined as string | undefined })),
+    discoverCatalog(CMD_BIN).catch(() => ({
+      models: [],
+      defaultModel: undefined as string | undefined,
+      cmdVersion: undefined as string | undefined,
+      capabilitySource: undefined as string | undefined,
+    })),
   ]);
   let authenticated: boolean | null = null;
   let model: string | null = null;
@@ -51,6 +56,8 @@ if (args.includes("--probe")) {
       authenticated,
       model,
       catalogModels: catalog.models.length,
+      catalogCapabilityModels: catalog.models.filter((entry) => entry.capabilities).length,
+      capabilitySource: catalog.capabilitySource ?? null,
       defaultModel: catalog.defaultModel ?? null,
     }) + "\n",
   );

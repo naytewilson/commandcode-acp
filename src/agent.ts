@@ -16,7 +16,12 @@ import * as acp from "@agentclientprotocol/sdk";
 import { Readable, Writable } from "node:stream";
 import { execFile } from "node:child_process";
 import { BRIDGE_VERSION, MODES } from "./version.js";
-import { discoverCatalog, type Catalog } from "./catalog.js";
+import {
+  discoverCatalog,
+  type Catalog,
+  type CatalogModel,
+  type CatalogModelCapabilities,
+} from "./catalog.js";
 import { loadAcpForCmd, loadBinding, saveBinding } from "./persist.js";
 import { SessionStore, type BridgeSession } from "./sessions.js";
 import { CmdRunError, runCmdTurn, type SessionMode } from "./runner.js";
@@ -68,6 +73,26 @@ function modelOptions(): Array<{ value: string; name: string; description?: stri
   }));
 }
 
+function modelEntry(modelId: string | null): CatalogModel | undefined {
+  if (!modelId) return undefined;
+  return catalog.models.find((model) => model.id === modelId);
+}
+
+function effortOptions(capabilities: CatalogModelCapabilities | undefined): Array<{
+  value: string;
+  name: string;
+}> {
+  return (capabilities?.reasoningEfforts ?? []).map((effort) => ({
+    value: effort,
+    name: effort === "xhigh" ? "Extra High" : effort.charAt(0).toUpperCase() + effort.slice(1),
+  }));
+}
+
+function modelCapabilitiesMeta(model: CatalogModel): Record<string, unknown> | undefined {
+  if (!model.capabilities) return undefined;
+  return { commandCodeCapabilities: model.capabilities };
+}
+
 function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[] {
   const opts: acp.SessionConfigOption[] = [
     {
@@ -81,6 +106,8 @@ function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[]
     },
   ];
   if (catalog.models.length > 0) {
+    const selectedModel = modelEntry(session.model ?? catalog.defaultModel ?? catalog.models[0]!.id);
+    const selectedEfforts = effortOptions(selectedModel?.capabilities);
     opts.push({
       id: "model",
       type: "select",
@@ -90,6 +117,20 @@ function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[]
       currentValue: session.model ?? catalog.defaultModel ?? catalog.models[0]!.id,
       options: modelOptions(),
     });
+    if (selectedEfforts.length > 0) {
+      opts.push({
+        id: "effort",
+        type: "select",
+        name: "Reasoning",
+        description: "Command Code reasoning effort confirmed by the selected model registry entry.",
+        category: "thought_level",
+        // ACP requires a current value for select options. A null bridge
+        // value still means "let cmd choose its model default"; the first
+        // confirmed tier is only the UI snapshot until T3 explicitly sets it.
+        currentValue: session.effort ?? selectedEfforts[0]!.value,
+        options: selectedEfforts,
+      });
+    }
   }
   return opts;
 }
@@ -98,6 +139,18 @@ function modeState(session: BridgeSession): acp.SessionModeState {
   return {
     currentModeId: session.mode,
     availableModes: MODES.map((m) => ({ id: m.id, name: m.name, description: m.description })),
+  };
+}
+
+function modelState(): Record<string, unknown> {
+  return {
+    currentModelId: catalog.defaultModel ?? catalog.models[0]?.id ?? "",
+    availableModels: catalog.models.slice(0, 200).map((model) => ({
+      modelId: model.id,
+      name: model.label,
+      ...(model.description ? { description: model.description } : {}),
+      ...(modelCapabilitiesMeta(model) ? { _meta: modelCapabilitiesMeta(model) } : {}),
+    })),
   };
 }
 
@@ -206,16 +259,11 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
           _meta: {
             ...(catalog.models.length > 0
               ? {
-                  modelState: {
-                    currentModelId:
-                      catalog.defaultModel ?? catalog.models[0]!.id,
-                    availableModels: catalog.models.slice(0, 200).map((m) => ({
-                      modelId: m.id,
-                      name: m.label,
-                      ...(m.description ? { description: m.description } : {}),
-                    })),
-                  },
+                  modelState: modelState(),
                 }
+              : {}),
+            ...(catalog.capabilitySource
+              ? { commandCodeCapabilitySource: catalog.capabilitySource }
               : {}),
             modeState: {
               currentModeId: "default",
@@ -310,6 +358,9 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
             throw new acp.RequestError(-32602, "model value must be a non-empty string");
           }
           s.model = p.value.trim();
+          if (!effortOptions(modelEntry(s.model)?.capabilities).some((option) => option.value === s.effort)) {
+            s.effort = null;
+          }
           log("info", `model set len=${s.model.length}`);
           return { configOptions: sessionConfigOptions(s) };
         }
@@ -317,7 +368,16 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
           if (typeof p.value !== "string" || !p.value.trim()) {
             throw new acp.RequestError(-32602, "effort value must be a non-empty string");
           }
-          s.effort = p.value.trim();
+          const effort = p.value.trim();
+          const available = effortOptions(modelEntry(s.model)?.capabilities);
+          if (!available.some((option) => option.value === effort)) {
+            throw new acp.RequestError(
+              -32602,
+              `effort '${effort}' is not advertised for the selected model`,
+            );
+          }
+          s.effort = effort;
+          log("info", `effort set=${effort}`);
           return { configOptions: sessionConfigOptions(s) };
         }
         throw new acp.RequestError(-32602, `unknown config option: ${configId}`);
