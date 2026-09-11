@@ -9,6 +9,22 @@ if (capture) {
 }
 const emit = (o) => process.stdout.write(JSON.stringify(o) + "\n");
 const SID = "11111111-2222-4333-8444-555555555555";
+// Deterministic catalog discovery for the fallback-model reasoning tests.
+// Gated on SCENARIO so all other scenarios keep today's behavior (unknown
+// args exit 2, catalog stays empty): status reports NO default model while
+// --list-models succeeds with one reasoning-capable model (via the cli.mjs
+// fixture next to this fake) and one model without capabilities.
+const argv = process.argv.slice(2);
+if (argv[0] === "status" && scenario === "list-reasoning") {
+  emit({ version: "9.9.9-test" });
+  process.exit(0);
+}
+if (argv[0] === "--list-models" && scenario === "list-reasoning") {
+  process.stdout.write(
+    "meta/muse-spark-1.3-test  Test reasoning model\nmeta/plain-test  Test model without capabilities\n",
+  );
+  process.exit(0);
+}
 
 if (scenario === "success") {
   emit({ type: "event", event: { type: "run_start", sessionId: SID } });

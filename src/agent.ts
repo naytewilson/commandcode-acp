@@ -78,6 +78,23 @@ function modelEntry(modelId: string | null): CatalogModel | undefined {
   return catalog.models.find((model) => model.id === modelId);
 }
 
+/**
+ * Canonical effective-model resolution (single source of truth).
+ * Displayed/current model, advertised reasoning options, effort
+ * validation, and effort-reset after model changes all resolve through
+ * here, so the ACP surface can never advertise an effort it then rejects.
+ * Precedence: explicit session selection, cmd-reported default, first
+ * catalog model. Unknown/absent metadata never fabricates levels:
+ * modelEntry returns undefined and no reasoning option is offered.
+ */
+function effectiveModelId(sessionModel: string | null): string | null {
+  return sessionModel ?? catalog.defaultModel ?? catalog.models[0]?.id ?? null;
+}
+
+function effectiveModelEntry(sessionModel: string | null): CatalogModel | undefined {
+  return modelEntry(effectiveModelId(sessionModel));
+}
+
 function effortOptions(capabilities: CatalogModelCapabilities | undefined): Array<{
   value: string;
   name: string;
@@ -106,7 +123,7 @@ function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[]
     },
   ];
   if (catalog.models.length > 0) {
-    const selectedModel = modelEntry(session.model ?? catalog.defaultModel ?? catalog.models[0]!.id);
+    const selectedModel = effectiveModelEntry(session.model);
     const selectedEfforts = effortOptions(selectedModel?.capabilities);
     opts.push({
       id: "model",
@@ -114,7 +131,7 @@ function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[]
       name: "Model",
       description: "Command Code model for subsequent turns (exact cmd model id).",
       category: "model",
-      currentValue: session.model ?? catalog.defaultModel ?? catalog.models[0]!.id,
+      currentValue: effectiveModelId(session.model) ?? catalog.models[0]!.id,
       options: modelOptions(),
     });
     if (selectedEfforts.length > 0) {
@@ -144,7 +161,7 @@ function modeState(session: BridgeSession): acp.SessionModeState {
 
 function modelState(): Record<string, unknown> {
   return {
-    currentModelId: catalog.defaultModel ?? catalog.models[0]?.id ?? "",
+    currentModelId: effectiveModelId(null) ?? "",
     availableModels: catalog.models.slice(0, 200).map((model) => ({
       modelId: model.id,
       name: model.label,
@@ -358,7 +375,7 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
             throw new acp.RequestError(-32602, "model value must be a non-empty string");
           }
           s.model = p.value.trim();
-          if (!effortOptions(modelEntry(s.model)?.capabilities).some((option) => option.value === s.effort)) {
+          if (!effortOptions(effectiveModelEntry(s.model)?.capabilities).some((option) => option.value === s.effort)) {
             s.effort = null;
           }
           log("info", `model set len=${s.model.length}`);
@@ -369,7 +386,7 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
             throw new acp.RequestError(-32602, "effort value must be a non-empty string");
           }
           const effort = p.value.trim();
-          const available = effortOptions(modelEntry(s.model)?.capabilities);
+          const available = effortOptions(effectiveModelEntry(s.model)?.capabilities);
           if (!available.some((option) => option.value === effort)) {
             throw new acp.RequestError(
               -32602,

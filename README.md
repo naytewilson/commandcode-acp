@@ -115,7 +115,10 @@ For each recognized model, the ACP initialize metadata may include:
   known-text-only registry.
 
 The bridge exposes the ACP `effort` select only for the selected model's
-confirmed reasoning values. A selected effort is passed as `--effort <value>`
+confirmed reasoning values. When no model is explicitly selected, the
+selected model is the cmd-reported default, else the first catalog model;
+display, advertised options, and effort validation all resolve through that
+same effective model, so an advertised effort is always accepted. A selected effort is passed as `--effort <value>`
 to the next `cmd` invocation and is included in the non-secret debug record.
 For example, Command Code 1.50.0 reports `low`, `medium`, `high`, `xhigh`, and
 `max` for `meta/muse-spark-1.3`, while
