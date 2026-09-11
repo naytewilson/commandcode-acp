@@ -5,12 +5,6 @@ import { serve } from "./agent.js";
 import { discoverCatalog } from "./catalog.js";
 import { execFile } from "node:child_process";
 
-import * as fs from "node:fs";
-try {
-  fs.writeFileSync("/tmp/paseo-env.json", JSON.stringify(process.env, null, 2));
-  fs.appendFileSync("/tmp/commandcode-acp-stdio.log", `[INDEX] pid=${process.pid} PATH=${process.env["PATH"]}\n`);
-} catch {}
-
 const CMD_BIN = process.env["COMMANDCODE_BIN"]?.trim() || "cmd";
 const args = process.argv.slice(2);
 
@@ -37,7 +31,12 @@ if (args.includes("--probe")) {
   const [ver, status, catalog] = await Promise.all([
     sh(CMD_BIN, ["--version"]),
     sh(CMD_BIN, ["status", "--json"]),
-    discoverCatalog(CMD_BIN).catch(() => ({ models: [], defaultModel: undefined as string | undefined, cmdVersion: undefined as string | undefined })),
+    discoverCatalog(CMD_BIN).catch(() => ({
+      models: [],
+      defaultModel: undefined as string | undefined,
+      cmdVersion: undefined as string | undefined,
+      capabilitySource: undefined as string | undefined,
+    })),
   ]);
   let authenticated: boolean | null = null;
   let model: string | null = null;
@@ -57,6 +56,8 @@ if (args.includes("--probe")) {
       authenticated,
       model,
       catalogModels: catalog.models.length,
+      catalogCapabilityModels: catalog.models.filter((entry) => entry.capabilities).length,
+      capabilitySource: catalog.capabilitySource ?? null,
       defaultModel: catalog.defaultModel ?? null,
     }) + "\n",
   );

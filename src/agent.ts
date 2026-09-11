@@ -16,7 +16,12 @@ import * as acp from "@agentclientprotocol/sdk";
 import { Readable, Writable } from "node:stream";
 import { execFile } from "node:child_process";
 import { BRIDGE_VERSION, MODES } from "./version.js";
-import { discoverCatalog, type Catalog } from "./catalog.js";
+import {
+  discoverCatalog,
+  type Catalog,
+  type CatalogModel,
+  type CatalogModelCapabilities,
+} from "./catalog.js";
 import { loadAcpForCmd, loadBinding, saveBinding } from "./persist.js";
 import { SessionStore, type BridgeSession } from "./sessions.js";
 import { CmdRunError, runCmdTurn, type SessionMode } from "./runner.js";
@@ -68,6 +73,43 @@ function modelOptions(): Array<{ value: string; name: string; description?: stri
   }));
 }
 
+function modelEntry(modelId: string | null): CatalogModel | undefined {
+  if (!modelId) return undefined;
+  return catalog.models.find((model) => model.id === modelId);
+}
+
+/**
+ * Canonical effective-model resolution (single source of truth).
+ * Displayed/current model, advertised reasoning options, effort
+ * validation, and effort-reset after model changes all resolve through
+ * here, so the ACP surface can never advertise an effort it then rejects.
+ * Precedence: explicit session selection, cmd-reported default, first
+ * catalog model. Unknown/absent metadata never fabricates levels:
+ * modelEntry returns undefined and no reasoning option is offered.
+ */
+function effectiveModelId(sessionModel: string | null): string | null {
+  return sessionModel ?? catalog.defaultModel ?? catalog.models[0]?.id ?? null;
+}
+
+function effectiveModelEntry(sessionModel: string | null): CatalogModel | undefined {
+  return modelEntry(effectiveModelId(sessionModel));
+}
+
+function effortOptions(capabilities: CatalogModelCapabilities | undefined): Array<{
+  value: string;
+  name: string;
+}> {
+  return (capabilities?.reasoningEfforts ?? []).map((effort) => ({
+    value: effort,
+    name: effort === "xhigh" ? "Extra High" : effort.charAt(0).toUpperCase() + effort.slice(1),
+  }));
+}
+
+function modelCapabilitiesMeta(model: CatalogModel): Record<string, unknown> | undefined {
+  if (!model.capabilities) return undefined;
+  return { commandCodeCapabilities: model.capabilities };
+}
+
 function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[] {
   const opts: acp.SessionConfigOption[] = [
     {
@@ -81,15 +123,31 @@ function sessionConfigOptions(session: BridgeSession): acp.SessionConfigOption[]
     },
   ];
   if (catalog.models.length > 0) {
+    const selectedModel = effectiveModelEntry(session.model);
+    const selectedEfforts = effortOptions(selectedModel?.capabilities);
     opts.push({
       id: "model",
       type: "select",
       name: "Model",
       description: "Command Code model for subsequent turns (exact cmd model id).",
       category: "model",
-      currentValue: session.model ?? catalog.defaultModel ?? catalog.models[0]!.id,
+      currentValue: effectiveModelId(session.model) ?? catalog.models[0]!.id,
       options: modelOptions(),
     });
+    if (selectedEfforts.length > 0) {
+      opts.push({
+        id: "effort",
+        type: "select",
+        name: "Reasoning",
+        description: "Command Code reasoning effort confirmed by the selected model registry entry.",
+        category: "thought_level",
+        // ACP requires a current value for select options. A null bridge
+        // value still means "let cmd choose its model default"; the first
+        // confirmed tier is only the UI snapshot until T3 explicitly sets it.
+        currentValue: session.effort ?? selectedEfforts[0]!.value,
+        options: selectedEfforts,
+      });
+    }
   }
   return opts;
 }
@@ -101,6 +159,18 @@ function modeState(session: BridgeSession): acp.SessionModeState {
   };
 }
 
+function modelState(): Record<string, unknown> {
+  return {
+    currentModelId: effectiveModelId(null) ?? "",
+    availableModels: catalog.models.slice(0, 200).map((model) => ({
+      modelId: model.id,
+      name: model.label,
+      ...(model.description ? { description: model.description } : {}),
+      ...(modelCapabilitiesMeta(model) ? { _meta: modelCapabilitiesMeta(model) } : {}),
+    })),
+  };
+}
+
 const sessions = new SessionStore();
 let activeCancel: (() => Promise<void>) | null = null;
 
@@ -108,6 +178,12 @@ function requireSession(id: string): BridgeSession {
   const s = sessions.get(id);
   if (!s) throw new acp.RequestError(-32602, `unknown ACP session: ${id}`);
   return s;
+}
+
+function parseSessionMode(value: unknown): SessionMode | undefined {
+  return value === "default" || value === "plan" || value === "auto-accept" || value === "full-access"
+    ? value
+    : undefined;
 }
 
 function promptTextOf(prompt: ReadonlyArray<{ type: string; text?: string }>): string {
@@ -125,7 +201,6 @@ async function handlePrompt(
   params: { sessionId: string; prompt: ReadonlyArray<{ type: string; text?: string }>; [k: string]: unknown },
   cx: { notify: (method: string, p: unknown) => Promise<void> },
 ): Promise<{ stopReason: "end_turn" | "max_turn_requests" | "cancelled" }> {
-  try { fs.appendFileSync("/tmp/commandcode-acp-stdio.log", `[HANDLE_PROMPT] sessionId=${params.sessionId}\n`); } catch {}
   const session = requireSession(params.sessionId);
   if (session.active) throw new acp.RequestError(-32600, "a turn is already running on this session");
   const text = promptTextOf(params.prompt as ReadonlyArray<{ type: string; text?: string }>);
@@ -201,16 +276,11 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
           _meta: {
             ...(catalog.models.length > 0
               ? {
-                  modelState: {
-                    currentModelId:
-                      catalog.defaultModel ?? catalog.models[0]!.id,
-                    availableModels: catalog.models.slice(0, 200).map((m) => ({
-                      modelId: m.id,
-                      name: m.label,
-                      ...(m.description ? { description: m.description } : {}),
-                    })),
-                  },
+                  modelState: modelState(),
                 }
+              : {}),
+            ...(catalog.capabilitySource
+              ? { commandCodeCapabilitySource: catalog.capabilitySource }
               : {}),
             modeState: {
               currentModeId: "default",
@@ -225,13 +295,11 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
         return {};
       })
       .onRequest("session/new", async (ctx) => {
-        try { fs.appendFileSync("/tmp/commandcode-acp-stdio.log", `[SESSION_NEW] params=${JSON.stringify(ctx.params)}\n`); } catch {}
         await ensureCatalog();
         const p = ctx.params as { cwd?: string };
         const cwd = typeof p.cwd === "string" && p.cwd.trim() ? p.cwd : process.cwd();
         const s = sessions.create(cwd, catalog.defaultModel ?? null);
         log("info", `session/new acp=${s.acpSessionId} cwd_len=${cwd.length}`);
-        try { fs.appendFileSync("/tmp/commandcode-acp-stdio.log", `[SESSION_NEW_DONE] acp=${s.acpSessionId}\n`); } catch {}
         return { sessionId: s.acpSessionId, modes: modeState(s), configOptions: sessionConfigOptions(s) };
       })
       .onRequest("session/load", async (ctx) => {
@@ -248,8 +316,7 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
         const persisted = loadBinding(id);
         if (persisted) {
           const cwd = typeof p.cwd === "string" && p.cwd.trim() ? p.cwd : persisted.cwd;
-          const mode: SessionMode =
-            persisted.mode === "plan" || persisted.mode === "auto-accept" ? persisted.mode : "default";
+          const mode = parseSessionMode(persisted.mode) ?? "default";
           const s = sessions.makeRestored(
             id,
             persisted.cmdSessionId,
@@ -281,10 +348,11 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
         const p = ctx.params as { sessionId?: string; modeId?: string };
         const s = requireSession(String(p.sessionId ?? ""));
         const modeId = String(p.modeId ?? "");
-        if (modeId !== "default" && modeId !== "plan" && modeId !== "auto-accept") {
-          throw new acp.RequestError(-32602, `unknown mode: ${modeId} (expected default|plan|auto-accept)`);
+        const mode = parseSessionMode(modeId);
+        if (!mode) {
+          throw new acp.RequestError(-32602, `unknown mode: ${modeId} (expected default|plan|auto-accept|full-access)`);
         }
-        s.mode = modeId as SessionMode;
+        s.mode = mode;
         log("info", `session/set_mode acp=${s.acpSessionId} mode=${modeId}`);
         return {};
       })
@@ -294,10 +362,11 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
         const configId = String(p.configId ?? "");
         if (configId === "mode") {
           const modeId = String(p.value ?? "");
-          if (modeId !== "default" && modeId !== "plan" && modeId !== "auto-accept") {
-            throw new acp.RequestError(-32602, `unknown mode: ${modeId} (expected default|plan|auto-accept)`);
+          const mode = parseSessionMode(modeId);
+          if (!mode) {
+            throw new acp.RequestError(-32602, `unknown mode: ${modeId} (expected default|plan|auto-accept|full-access)`);
           }
-          s.mode = modeId as SessionMode;
+          s.mode = mode;
           log("info", `session/set_config_option mode set=${modeId}`);
           return { configOptions: sessionConfigOptions(s) };
         }
@@ -306,6 +375,9 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
             throw new acp.RequestError(-32602, "model value must be a non-empty string");
           }
           s.model = p.value.trim();
+          if (!effortOptions(effectiveModelEntry(s.model)?.capabilities).some((option) => option.value === s.effort)) {
+            s.effort = null;
+          }
           log("info", `model set len=${s.model.length}`);
           return { configOptions: sessionConfigOptions(s) };
         }
@@ -313,7 +385,16 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
           if (typeof p.value !== "string" || !p.value.trim()) {
             throw new acp.RequestError(-32602, "effort value must be a non-empty string");
           }
-          s.effort = p.value.trim();
+          const effort = p.value.trim();
+          const available = effortOptions(effectiveModelEntry(s.model)?.capabilities);
+          if (!available.some((option) => option.value === effort)) {
+            throw new acp.RequestError(
+              -32602,
+              `effort '${effort}' is not advertised for the selected model`,
+            );
+          }
+          s.effort = effort;
+          log("info", `effort set=${effort}`);
           return { configOptions: sessionConfigOptions(s) };
         }
         throw new acp.RequestError(-32602, `unknown config option: ${configId}`);
@@ -336,25 +417,15 @@ export function buildAgent(): ReturnType<typeof acp.agent> {
   );
 }
 
-import * as fs from "node:fs";
-
 export async function serve(): Promise<void> {
-  const logFile = "/tmp/commandcode-acp-stdio.log";
-  const debug = (msg: string) => {
-    try { fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${msg}\n`); } catch {}
-  };
-  debug(`serve() started pid=${process.pid} cmd=${CMD_BIN}`);
-
   const input = Writable.toWeb(process.stdout) as WritableStream<Uint8Array>;
   const output = Readable.toWeb(process.stdin) as ReadableStream<Uint8Array>;
   const stream = acp.ndJsonStream(input, output);
   const conn = buildAgent().connect(stream);
   log("info", `commandcode-acp v${BRIDGE_VERSION} serving on stdio (cmd=${CMD_BIN})`);
-  debug("agent connected to stream, awaiting closed");
   try {
     await conn.closed;
-    debug("connection closed cleanly");
   } catch (err) {
-    debug(`connection closed with error: ${err}`);
+    log("warn", `connection closed with error: ${err instanceof Error ? err.message : String(err)}`);
   }
 }

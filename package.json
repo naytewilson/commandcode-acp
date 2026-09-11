@@ -1,6 +1,6 @@
 {
   "name": "commandcode-acp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Thin ACP v1 stdio bridge for the Command Code CLI (cmd -p --output-format json). Shared integration boundary for Paseo and T3 Code.",
   "type": "module",
   "engines": {

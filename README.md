@@ -28,7 +28,7 @@ BRIDGE_LOG=debug node dist/src/index.js
 - `initialize` → `{ protocolVersion: 1, agentCapabilities: { loadSession: true,
   promptCapabilities: { image: false, audio: false, embeddedContext: false } } }`
 - `session/new` → fresh ACP id, no cmd process yet. Response carries
-  `modes` (default/plan/auto-accept) and a `model` select config option
+  `modes` (default/plan/auto-accept/full-access) and a `model` select config option
   built from **real `cmd --list-models` discovery** (exact ids, no hard codes).
   Empty catalog → option omitted; use client-side `models` override instead.
 - `session/prompt` → exactly one `cmd -p <text> --output-format json`
@@ -40,7 +40,7 @@ BRIDGE_LOG=debug node dist/src/index.js
   Exit 130 is reported as `cancelled`, never as failure.
 - `session/load` → rebind a known ACP id, or bind an **explicit cmd
   transcript id** to a fresh ACP id (how T3 resumes across processes).
-- `session/set_mode` → `default` | `plan` | `auto-accept` (anything else rejected).
+- `session/set_mode` → `default` | `plan` | `auto-accept` | `full-access` (anything else rejected).
 - `session/set_config_option` → `model` (exact cmd id), `effort` (passthrough).
 
 ## Session contract
@@ -58,11 +58,12 @@ persisted to disk; resume state lives in the client's thread binding
 | `default`    | (none)           | Fail-closed headless defaults: reads allowed; writes/shell denied unless project rules allow. |
 | `plan`       | `--plan`         | Read-only exploration. |
 | `auto-accept`| `--auto-accept`  | Accept edits automatically. |
+| `full-access`| `--yolo`         | Explicit high-authority mode; enables shell and edit tools. |
 
-There is **no yolo mode**: `--yolo` is never added silently. `cmd -p`
-exposes no approval request/response channel (live evidence: denied tools
-emit terminal `tool_hook_blocked`, never an approval request), so no
-interactive approval bridging is implemented.
+`--yolo` is never added silently: it is emitted only for the explicit ACP
+`full-access` mode. `cmd -p` exposes no approval request/response channel
+(live evidence: denied tools emit terminal `tool_hook_blocked`, never an
+approval request), so no interactive approval bridging is implemented.
 
 ## Exit-code mapping (faithful)
 
@@ -93,9 +94,53 @@ T3 Code integrates Command Code natively through its provider driver registry
 
 - **Driver:** `CommandCodeDriver` in `apps/server/src/provider/Drivers/CommandCodeDriver.ts`
 - **Settings:** `CommandCodeSettings` with optional `binaryPath` override
-- **Modes:** Maps T3 interaction modes (`plan` -> `plan`, `full-access`/`auto-accept-edits` -> `auto-accept`, standard -> `default`)
+- **Modes:** Maps T3 interaction modes (`plan` -> `plan`, `full-access` -> `full-access`, `auto-accept-edits` -> `auto-accept`, standard -> `default`)
 - **Models:** Real model discovery via `cmd --list-models` (e.g. `poolside/laguna-s-2.1-free`, `moonshotai/kimi-k2.5`, `meta/muse-spark-1.3-contributor`)
 - **Resume:** Preserves exact `cmdSessionId` cursor across process restarts
+
+### Current model-capability fidelity
+
+The bridge discovers the model list from the installed Command Code executable
+and extracts capability metadata from that same installed bundle. It does not
+infer capabilities from model names. The current parser recognizes the
+Command Code registry shape used by the installed `dist/cli.mjs` and fails
+closed (no capability metadata) when that shape changes.
+
+For each recognized model, the ACP initialize metadata may include:
+
+- `commandCodeCapabilities.reasoningEfforts` — the exact `--effort` values
+  maintained by Command Code for that model;
+- `commandCodeCapabilities.contextWindow` — the bundle's context-window value;
+- `commandCodeCapabilities.supportsVision` — derived from Command Code's own
+  known-text-only registry.
+
+The bridge exposes the ACP `effort` select only for the selected model's
+confirmed reasoning values. When no model is explicitly selected, the
+selected model is the cmd-reported default, else the first catalog model;
+display, advertised options, and effort validation all resolve through that
+same effective model, so an advertised effort is always accepted. A selected effort is passed as `--effort <value>`
+to the next `cmd` invocation and is included in the non-secret debug record.
+For example, Command Code 1.50.0 reports `low`, `medium`, `high`, `xhigh`, and
+`max` for `meta/muse-spark-1.3`, while
+`meta/muse-spark-1.3-contributor` reports no `max`; the bridge preserves that
+distinction.
+
+### Pinned deployment contract
+
+The bridge is an independent companion component. A deployment must record:
+
+1. the source remote and exact bridge commit;
+2. `node --version` (Node.js 22 or newer);
+3. `npm run build` and `npm test` results;
+4. the exact `npm pack` tarball and staged entrypoint SHA-256 values;
+5. the compatible Command Code CLI version and its isolated executable path;
+6. the rollback artifact and its source commit.
+
+Stage a release from the checked-out commit with `npm pack`, install that
+tarball into a candidate-owned prefix, and point both the ACP launcher and
+`COMMANDCODE_BIN` at the staged paths. Production must not point at a mutable
+development worktree. Rollback selects the recorded prior staged artifact and
+restores its bridge/CLI pair without changing T3 core.
 
 ## Paseo Integration (Dual Host: NEO & DELL)
 
@@ -152,10 +197,9 @@ Paseo consumes `commandcode-acp` as a custom ACP provider (`extends: "acp"`).
 ## Acceptance Verification
 
 ```sh
-# Run full bridge unit + fixture test suite (47 tests):
+# Run full bridge unit + fixture test suite (50 tests):
 npm test
 
 # Verify ACP handshake and model discovery directly over stdio:
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":1,"clientCapabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | node dist/src/index.js
 ```
-

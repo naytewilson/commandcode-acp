@@ -9,7 +9,7 @@ import { CANCEL_SHUTDOWN_MS, classifyExitCode, describeClassification, stopReaso
 import { isFinalResult, parseCmdLine, type CmdFinalResult } from "./cmdEvents.js";
 import { DIAGNOSTIC_EVENTS, mapCmdEvent, type AcpUpdate } from "./eventMap.js";
 
-export type SessionMode = "default" | "plan" | "auto-accept";
+export type SessionMode = "default" | "plan" | "auto-accept" | "full-access";
 
 export interface RunOptions {
   cmdBin: string;
@@ -70,6 +70,10 @@ export function buildCmdArgs(o: {
     case "auto-accept":
       args.push("--auto-accept");
       break;
+    case "full-access":
+      // Only an explicit ACP full-access selection may add --yolo.
+      args.push("--yolo");
+      break;
     case "default":
       break;
   }
@@ -106,7 +110,10 @@ export function runCmdTurn(opts: RunOptions): { promise: Promise<RunOutcome>; ca
       mode: opts.mode,
       maxTurns: opts.maxTurns,
     });
-    onLog("debug", `spawn cmd argc=${args.length} cwd_len=${opts.cwd.length} resume=${opts.resumeCmdSessionId ? "yes" : "no"} model=${opts.model ?? "(default)"} mode=${opts.mode}`);
+    onLog(
+      "debug",
+      `spawn cmd argc=${args.length} cwd_len=${opts.cwd.length} resume=${opts.resumeCmdSessionId ? "yes" : "no"} model=${opts.model ?? "(default)"} effort=${opts.effort ?? "(default)"} mode=${opts.mode}`,
+    );
     child = spawn(opts.cmdBin, args, { cwd: opts.cwd, stdio: ["ignore", "pipe", "pipe"] });
     const proc = child;
     const pid = proc.pid;
